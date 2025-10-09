@@ -1,19 +1,20 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Navbar from "./components/Navbar";
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Home from './pages/Home';
+import Dashboard from './pages/Dashboard';
+import Login from './pages/Login';
+import Pedidos from './pages/Pedidos';
 
-import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
-
-export default function App() {
+function App() {
   return (
     <BrowserRouter>
-      <Navbar />
-      <div className="pt-20"> {/* deja espacio para la navbar fija */}
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/login" element={<Login />} />
-        </Routes>
-      </div>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/pedidos" element={<Pedidos />} />
+      </Routes>
     </BrowserRouter>
   );
 }
+
+export default App;
