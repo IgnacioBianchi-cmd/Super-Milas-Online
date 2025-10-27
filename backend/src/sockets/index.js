@@ -1,28 +1,41 @@
-const { Server } = require('socket.io');
-const { env } = require('../config/env');
+let ioInstance = null;
 
-let io;
+function initSocket(server) {
+  const { Server } = require('socket.io');
 
-const initSocket = (server) => {
-  io = new Server(server, {
-    cors: { origin: env.ALLOWED_ORIGINS, methods: ['GET', 'POST'] }
+  ioInstance = new Server(server, {
+    cors: {
+      origin: (process.env.ALLOWED_ORIGINS || '')
+        .split(',')
+        .map(s => s.trim())
+        .filter(Boolean) || '*',
+      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+      credentials: true
+    }
   });
 
-  io.on('connection', (socket) => {
-    // En el futuro: Electron hará join al room de la sucursal
-    socket.on('branch:join', (branchCode) => {
-      socket.join(`branch:${branchCode}`);
+  // Rooms por sucursal: "branch:<codigoInterno>"
+  ioInstance.on('connection', (socket) => {
+    socket.on('join-branch', (sucursalCodigo) => {
+      if (sucursalCodigo) {
+        socket.join(`branch:${sucursalCodigo}`);
+      }
     });
-
-    socket.on('disconnect', () => {});
+    socket.on('leave-branch', (sucursalCodigo) => {
+      if (sucursalCodigo) {
+        socket.leave(`branch:${sucursalCodigo}`);
+      }
+    });
   });
 
-  return io;
-};
+  return ioInstance;
+}
 
-const getIO = () => {
-  if (!io) throw new Error('Socket.io no inicializado');
-  return io;
-};
+function getIO() {
+  if (!ioInstance) {
+    throw new Error('Socket.IO no inicializado. Llamá a initSocket(server) primero.');
+  }
+  return ioInstance;
+}
 
 module.exports = { initSocket, getIO };

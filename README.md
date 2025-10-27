@@ -8,7 +8,6 @@ Frontend (React) y base de datos (infra) serán desarrollados por el equipo.
 - MongoDB / Mongoose
 - JWT auth, verificación por email (código 6 dígitos)
 - Socket.io (eventos `pedido:nuevo`, `print:pedido`)
-- Electron (app de escritorio) consumirá `/gestion/*`
 - Reportes con export CSV
 
 ## Requisitos

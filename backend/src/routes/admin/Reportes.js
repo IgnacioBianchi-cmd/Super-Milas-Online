@@ -3,8 +3,14 @@ const { Joi, validar } = require('../../middlewares/validar');
 const Pedido = require('../../models/Pedido');
 const { parseRango } = require('../../utils/fechas');
 const { aCSV } = require('../../utils/csv');
+const requireAuth = require('../../middlewares/requireAuth');
+const requireRole = require('../../middlewares/requireRole');
+const scopeSucursal = require('../../middlewares/scopeSucursal');
 
 const router = express.Router();
+router.use(requireAuth);                 // exige JWT
+router.use(requireRole('admin','staff'));// restringe a roles admin/staff
+router.use(scopeSucursal);               // fija req.scope según rol
 
 const rangoSchema = Joi.object({
   sucursal: Joi.string().valid('RES', 'COR1', 'COR2').required(),
@@ -118,7 +124,6 @@ router.get('/pedidos', validar(rangoSchema, 'query'), async (req, res, next) => 
       fecha: p.createdAt.toISOString(),
       estado: p.estado,
       metodoPago: p.metodoPago,
-      pagado: p.pagado ? 'si' : 'no',
       entrega: p.entrega?.tipo,
       total: p.totales?.total ?? 0
     }));
@@ -161,7 +166,6 @@ router.get('/export.csv', validar(
         fecha: p.createdAt.toISOString(),
         estado: p.estado,
         metodoPago: p.metodoPago,
-        pagado: p.pagado ? 'si' : 'no',
         entrega: p.entrega?.tipo,
         total: p.totales?.total ?? 0
       }));

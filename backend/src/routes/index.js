@@ -3,16 +3,16 @@ const menu = require('./menu');
 const sucursales = require('./sucursales');
 const promocionesPublicas = require('./promocion');
 const pedidosPublicos = require('./pedido');
-
-const claveSucursal = require('../middlewares/claveSucursal');
-const categoriasGestion = require('./gestion/categorias');
-const productosGestion = require('./gestion/productos');
-const promocionesGestion = require('./gestion/promociones');
-const pedidosGestion = require('./gestion/Pedidos');
-const reportesGestion = require('./gestion/Reportes');
 const authRutas = require('./auth');
+const authAdminRutas = require('./authAdmin');
 
 const router = express.Router();
+
+const adminCategorias = require('./admin/Categorias');
+const adminProductos = require('./admin/Productos');
+const adminPromos = require('./admin/Promociones');
+const adminPedidos = require('./admin/Pedidos');
+const adminReportes = require('./admin/Reportes');
 
 router.get('/', (req, res) => {
   res.json({ api: 'Super Milas Backend', version: '0.1.0' });
@@ -23,13 +23,14 @@ router.use('/sucursales', sucursales);
 router.use('/menu', menu);
 router.use('/promociones', promocionesPublicas);
 router.use('/auth', authRutas);
+router.use('/auth/admin', authAdminRutas);
 router.use('/pedidos', pedidosPublicos);
 
-// Gestión (app de escritorio)
-router.use('/gestion/categorias', claveSucursal, categoriasGestion);
-router.use('/gestion/productos', claveSucursal, productosGestion);
-router.use('/gestion/promociones', claveSucursal, promocionesGestion);
-router.use('/gestion/pedidos', claveSucursal, pedidosGestion);
-router.use('/gestion/reportes', claveSucursal, reportesGestion);
+// Administracion
+router.use('/admin/categorias', adminCategorias);
+router.use('/admin/productos', adminProductos);
+router.use('/admin/promociones', adminPromos);
+router.use('/admin/pedidos', adminPedidos);
+router.use('/admin/reportes', adminReportes);
 
 module.exports = router;

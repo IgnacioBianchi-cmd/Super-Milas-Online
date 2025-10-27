@@ -2,8 +2,14 @@ const express = require('express');
 const { validar, Joi } = require('../../middlewares/validar');
 const Producto = require('../../models/Producto');
 const Categoria = require('../../models/Categoria');
+const requireAuth = require('../../middlewares/requireAuth');
+const requireRole = require('../../middlewares/requireRole');
+const scopeSucursal = require('../../middlewares/scopeSucursal');
 
 const router = express.Router();
+router.use(requireAuth);                 // exige JWT
+router.use(requireRole('admin','staff'));// restringe a roles admin/staff
+router.use(scopeSucursal);               // fija req.scope según rol
 
 // Schemas de validación
 const varianteSchema = Joi.object({

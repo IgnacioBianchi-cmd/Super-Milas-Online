@@ -5,6 +5,7 @@ const Pedido = require('../models/Pedido');
 const Producto = require('../models/Producto');
 const { generarNumeroPedido } = require('../utils/numeroPedido');
 const { getIO } = require('../sockets');
+const { resolveSucursalCodigo } = require('../utils/resolveSucursal');
 
 const router = express.Router();
 
@@ -43,7 +44,16 @@ const crearInvitadoSchema = Joi.object({
     nombreCompleto: Joi.string().required(),
     telefono: Joi.string().required()
   }).required()
+});router.post('/:id/confirmar-pago', async (req, res, next) => {
+  const p = await Pedido.findById(req.params.id);
+  if (!p) return res.status(404).json({ error: 'No encontrado' });
+  if (p.estado === 'pendiente_pago') {
+    pushEstado(p, 'aceptado', req.user.sub);
+    await p.save();
+  }
+  res.json(p);
 });
+
 
 // Registrado (usa token)
 const crearRegistradoSchema = Joi.object({
@@ -84,69 +94,55 @@ async function hidratarItems(items) {
 }
 
 // POST /api/pedidos (invitado)
-router.post('/invitado', validar(crearInvitadoSchema), async (req, res, next) => {
+router.post('/', async (req, res) => {
   try {
-    const { sucursalCodigo, entrega, metodoPago, items, invitado, notas } = req.body;
-
-    const itemsList = await hidratarItems(items);
-    const totales = calcularTotales({ items: itemsList }); // costoEnvio: a definir si corresponde
-
-    const numero = await generarNumeroPedido(sucursalCodigo);
-
-    const pedido = await Pedido.create({
-      numero,
-      sucursalCodigo,
+    const {
+      sucursalSlug,
+      sucursalCodigo: legacyCodigo, // compat transitoria
+      tipoEntrega,                  // 'retiro' | 'delivery'
+      items = [],
+      metodoPago,                   // 'efectivo' | 'transferencia'
+      cliente,
       invitado,
-      entrega,
-      metodoPago,
-      items: itemsList,
-      totales,
-      notas: notas || '',
-      historialEstados: [{ estado: 'pendiente' }]
-    });
+      notas
+    } = req.body || {};
 
-    // Emitir a la sucursal
-    try {
-      const io = getIO();
-      io.to(`branch:${sucursalCodigo}`).emit('pedido:nuevo', { numero: pedido.numero, _id: pedido._id });
-    } catch {}
+    const sucursalCodigo = await resolveSucursalCodigo({ sucursalSlug, legacyCodigo });
+    if (!sucursalCodigo) {
+      return res.status(400).json({ error: 'Sucursal inválida' });
+    }
 
-    res.status(201).json({ item: { _id: pedido._id, numero: pedido.numero } });
-  } catch (err) {
-    next(err);
-  }
-});
+    // TODO: validaciones (horario, items, etc.)
 
-// POST /api/pedidos (registrado)
-router.post('/registrado', auth, validar(crearRegistradoSchema), async (req, res, next) => {
-  try {
-    const { sucursalCodigo, entrega, metodoPago, items, notas } = req.body;
+    // TODO: calcular totales reales
+    const totales = {
+      subtotal: 0,
+      descuento: 0,
+      costoEnvio: 0,
+      total: 0
+    };
 
-    const itemsList = await hidratarItems(items);
-    const totales = calcularTotales({ items: itemsList });
-
-    const numero = await generarNumeroPedido(sucursalCodigo);
-
-    const pedido = await Pedido.create({
-      numero,
+    const pedido = new Pedido({
       sucursalCodigo,
-      usuario: req.usuario.id,
-      entrega,
+      tipoEntrega,
+      items,
       metodoPago,
-      items: itemsList,
+      cliente,
+      invitado,
       totales,
-      notas: notas || '',
-      historialEstados: [{ estado: 'pendiente' }]
+      estado: 'pendiente',   // ajustá a tu flujo
     });
 
-    try {
-      const io = getIO();
-      io.to(`branch:${sucursalCodigo}`).emit('pedido:nuevo', { numero: pedido.numero, _id: pedido._id });
-    } catch {}
+    await pedido.save();
 
-    res.status(201).json({ item: { _id: pedido._id, numero: pedido.numero } });
+    // TODO: emitir sockets a branch:<sucursalCodigo>, etc.
+
+    const safe = pedido.toObject();
+    delete safe.sucursalCodigo;
+    return res.status(201).json(safe);
   } catch (err) {
-    next(err);
+    console.error('Error creando pedido:', err);
+    res.status(500).json({ error: 'Error interno' });
   }
 });
 

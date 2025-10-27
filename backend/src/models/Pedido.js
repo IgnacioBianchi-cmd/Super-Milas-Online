@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { Schema } = mongoose;
 
 const ItemSchema = new mongoose.Schema(
   {
@@ -49,7 +50,6 @@ const PedidoSchema = new mongoose.Schema(
     },
 
     metodoPago: { type: String, enum: ['efectivo', 'transferencia'], required: true },
-    pagado: { type: Boolean, default: false },
 
     items: { type: [ItemSchema], validate: v => Array.isArray(v) && v.length > 0 },
 
@@ -60,9 +60,23 @@ const PedidoSchema = new mongoose.Schema(
       total: { type: Number, required: true, min: 0 }
     },
 
-    tiempoEstimadoMin: { type: Number, default: 40 }, // ~40 min
-    estado: { type: String, enum: ['pendiente', 'aceptado', 'rechazado'], default: 'pendiente' },
+    tiempoEstimadoMin: { type: Number, default: 40 },
+
+    estado: {
+      type: String,
+      enum: ['pendiente', 'pendiente_pago', 'aceptado', 'en_preparacion', 'listo', 'entregado', 'rechazado'],
+      default: 'pendiente'
+    },
+
     historialEstados: { type: [HistEstadoSchema], default: [] },
+
+    contactoLog: [{
+    fecha: { type: Date, default: Date.now },
+    canal: { type: String, enum: ['whatsapp', 'telefono', 'otro'], default: 'whatsapp' },
+    tipo: { type: String, enum: ['aceptado','en_preparacion','listo','entregado','rechazado','custom'], default: 'custom' },
+    contenido: { type: String },
+    por: { type: Schema.Types.ObjectId, ref: 'Usuario' }
+    }],
 
     notas: { type: String, trim: true } // nota general del pedido
   },

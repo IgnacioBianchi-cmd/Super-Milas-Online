@@ -20,12 +20,18 @@ const UsuarioSchema = new mongoose.Schema(
     telefono: { type: String, trim: true },
     metodoPagoPreferido: { type: String, enum: ['efectivo', 'transferencia', null], default: null },
     direcciones: { type: [DireccionSchema], default: [] },
-    emailVerificado: { type: Boolean, default: false }
+    emailVerificado: { type: Boolean, default: false },
+    rol: {
+      type: String,
+      enum: ['admin', 'staff', 'cliente'],
+      default: 'cliente'
+    },
+    sucursalCodigo: {
+      type: String, // 'RES' | 'COR1' | 'COR2'
+      required: function() { return this.rol === 'staff'; },
+    },
   },
   { timestamps: true }
 );
-
-// índice para búsquedas por email
-UsuarioSchema.index({ email: 1 }, { unique: true });
 
 module.exports = mongoose.model('Usuario', UsuarioSchema);

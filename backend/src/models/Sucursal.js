@@ -6,9 +6,14 @@ const SucursalSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
-      uppercase: true,
-      trim: true,
       enum: ['RES', 'COR1', 'COR2']
+    },
+    slug: {
+      type: String,
+      required: true,
+      unique: true,        // identificador público seguro
+      lowercase: true,
+      trim: true
     },
     nombre: { type: String, required: true, trim: true },
     ciudad: { type: String, trim: true },

@@ -2,8 +2,14 @@ const express = require('express');
 const { validar, Joi } = require('../../middlewares/validar');
 const Promocion = require('../../models/Promociones');
 const Producto = require('../../models/Producto');
+const requireAuth = require('../../middlewares/requireAuth');
+const requireRole = require('../../middlewares/requireRole');
+const scopeSucursal = require('../../middlewares/scopeSucursal');
 
 const router = express.Router();
+router.use(requireAuth);                 // exige JWT
+router.use(requireRole('admin','staff'));// restringe a roles admin/staff
+router.use(scopeSucursal);               // fija req.scope según rol
 
 const idMongo = Joi.string().regex(/^[0-9a-fA-F]{24}$/);
 
