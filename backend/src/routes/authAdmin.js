@@ -1,14 +1,18 @@
+// backend/src/routes/authAdmin.js
 const router = require('express').Router();
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 const Usuario = require('../models/Usuario');
 
 router.post('/login', async (req, res) => {
-  const { email, password } = req.body; // asumimos hash/compare ya existe en tu auth normal
-  const user = await Usuario.findOne({ email }).select('+passwordHash');
+  const { email, password } = req.body;
 
+  const user = await Usuario.findOne({ email });
   if (!user) return res.status(401).json({ error: 'Credenciales inválidas' });
-  const ok = await user.comparePassword(password);
+
+  const ok = await bcrypt.compare(password, user.hash);
   if (!ok) return res.status(401).json({ error: 'Credenciales inválidas' });
+
   if (!['admin','staff'].includes(user.rol)) {
     return res.status(403).json({ error: 'Sin permisos de administración' });
   }
