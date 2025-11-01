@@ -25,7 +25,7 @@ router.use('/sucursales', sucursales);
 router.use('/menu', menu);
 router.use('/promociones', promocionesPublicas);
 router.use('/auth', authRutas);
-router.use('/auth/admin', authAdminRutas);
+router.use('/admin/auth', authAdminRutas);
 router.use('/pedidos', pedidosPublicos);
 router.use('/setup', setup);
 

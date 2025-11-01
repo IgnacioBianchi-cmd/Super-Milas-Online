@@ -3,6 +3,7 @@ import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Pedidos from './pages/Pedidos';
+import AdminPanel from './pages/AdminPanel';
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/login" element={<Login />} />
         <Route path="/pedidos" element={<Pedidos />} />
+        <Route path="/admin" element={<AdminPanel />} />
       </Routes>
     </BrowserRouter>
   );
